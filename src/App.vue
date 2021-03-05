@@ -5,6 +5,7 @@
       <div>
         <button
             class="bg-gray-400 hover:bg-gray-700 text-white font-bold py-2 px-4 border rounded"
+            @click="shuffle"
         >Случайны юзер</button>
       </div>
       <div>
@@ -46,15 +47,18 @@
             @click="addTemplate(website,'WEBSITE')"
         >вебсайт
         </button>
+        <input type="text">
         <textarea v-model="template" cols="40" rows="10" class="form-textarea mt-1 block w-full" ref="repl"></textarea>
       </div>
       <div class="mt-5">
         <button
             class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 border border-blue-700 rounded"
-        >Загрузить
+            @click="loadTemplate()"
+        >Загрузить шаблон
         </button>
         <button
             class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 border border-blue-700 rounded ml-3"
+            @click="saveTemplate()"
         >Сохранить шаблон
         </button>
 
@@ -68,6 +72,7 @@
 
 <script>
 
+import {getUsers} from "@/api";
 
 export default {
   name: 'App',
@@ -76,38 +81,53 @@ export default {
   },
   data(){
     return {
-      users: [{name:'Lucas',email:'gespwnz@gmail.com',phone:'+1452342424',website:'google.com'}],
+      users: [],
       name: '',
       email: '',
       phone: '',
       website: '',
+      description: '',
       template: '',
       tempalateAll: '',
       tpl: '',
     }
   },
-  created() {
-    let {name,email,phone,website} = this.users[0];
+   async created() {
 
-    this.name = name;
-    this.email = email
-    this.phone = phone
-    this.website = website
+    let users = JSON.parse(localStorage.getItem('users'));
+
+    if (!localStorage.getItem('users')){
+      users = await getUsers();
+      localStorage.setItem('users', JSON.stringify(users));
+    }
+
+    this.users = users.map((u) => {
+      return {name: u.name, email: u.email, phone: u.phone, website: u.website}
+    })
+
+    this.shuffle();
   },
   methods: {
-    loadUsers(){
+    shuffle(){
+      let {name,email,phone,website} = this.users[Math.floor(Math.random() * 10)];
 
+      this.name = name;
+      this.email = email
+      this.phone = phone
+      this.website = website
     },
-    saveLocal() {
+    loadTemplate(){
+        this.template = JSON.parse(localStorage.getItem('template'))
     },
-    loadLocal() {
-
+    saveTemplate() {
+      localStorage.setItem('template', JSON.stringify(this.template));
     },
     addTemplate(text,attr) {
    // p-4 bg-indigo-300 text-white text-center font-extrabold flex items-center justify-center border-8 border-indigo-600
       // border-dashed h-16 flex-1 rounded-md border-4 border-indigo-500 border-opacity-100 font-extrabold text-indigo-600 flex justify-center items-center
       // border-3 border-dashed border-green-400
-      this.template  = this.template +  `<span class="border-dashed flex-1 rounded-md border-4 border-indigo-500 border-opacity-100 font-extrabold text-indigo-600 flex justify-center items-center">[[[${attr}]]]<span>`;
+      this.template  = this.template + attr;
+      // this.template  = this.template +  `<span class="border-dashed flex-1 rounded-md border-4 border-indigo-500 border-opacity-100 font-extrabold text-indigo-600 flex justify-center items-center">[[[${attr}]]]<span>`;
       // switch (attr){
       //   case 'NAME':
       //     console.log(this.$refs.repl.value.replaceAll(`[[[${attr}]]]`, this.name));
